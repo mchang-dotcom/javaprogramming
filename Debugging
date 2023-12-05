@@ -1,0 +1,4 @@
+With this document we have provided three Java programs, Bad1.java, Bad2.java, and Bad3.java, each of which contains a single error. Attempt to compile and run each program and observe the resulting error message. Note, you will have to compile and run them on your own local machine, outside of the Vocareum environment. Then, fix whatever is wrong with the programs so that you are able to compile and run them.
+
+You will submit the fixed versions of Bad1.java, Bad2.java, and Bad3.java.
+
