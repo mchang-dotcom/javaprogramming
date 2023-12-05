@@ -1,0 +1,31 @@
+public class PrimitiveOperations {
+    public static void main(String[] args) {
+        // a) Declare and initialize an integer and a floating point value
+        int myInt = 5;  // example integer
+        double myDouble = 3.5;  // example floating point value
+
+        // Printing the values
+        System.out.println(myInt);
+        System.out.println(myDouble);
+
+        // b) Multiply and store in a new variable
+        double product = myInt * myDouble;  // double can hold the result without data loss
+        System.out.println(product);
+
+        // c) Convert integer to floating point and store in a new variable
+        double floatFromInt = (double) myInt;  // casting int to double
+        System.out.println(floatFromInt);
+
+        // d) Convert floating point to integer and store in a new variable
+        int intFromFloat = (int) myDouble;  // casting double to int, loses the fractional part
+        System.out.println(intFromFloat);
+
+        // e) Declare a char variable with an uppercase letter
+        char myChar = 'A';  // example uppercase letter
+        System.out.println(myChar);
+
+        // f) Convert the uppercase letter to lowercase using a numerical operation
+        char lowerCaseChar = (char) (myChar + 32);  // 32 is the difference between upper and lower case in ASCII
+        System.out.println(lowerCaseChar);
+    }
+}
