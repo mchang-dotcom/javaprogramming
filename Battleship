@@ -1,0 +1,144 @@
+import java.util.Scanner;
+
+public class Battleship {
+    private static final int GRID_SIZE = 5;
+    private static final char EMPTY = '-';
+    private static final char SHIP = '@';
+    private static final char HIT = 'X';
+    private static final char MISS = 'O';
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Welcome to Battleship!");
+
+        char[][] player1LocationBoard = createEmptyBoard();
+        char[][] player2LocationBoard = createEmptyBoard();
+        char[][] player1TargetHistoryBoard = createEmptyBoard();
+        char[][] player2TargetHistoryBoard = createEmptyBoard();
+
+        enterAllShipLocations(scanner, 1, player1LocationBoard, "PLAYER 1, ENTER YOUR SHIPS’ COORDINATES.");
+        printBattleShip(player1LocationBoard);
+        System.out.println();
+
+        enterAllShipLocations(scanner, 2, player2LocationBoard, "PLAYER 2, ENTER YOUR SHIPS’ COORDINATES.");
+        printBattleShip(player2LocationBoard);
+        System.out.println();
+
+        int currentPlayer = 1;
+        boolean gameEnded = false;
+
+        while (!gameEnded) {
+            char[][] currentLocationBoard = (currentPlayer == 1) ? player2LocationBoard : player1LocationBoard;
+            char[][] currentTargetHistoryBoard = (currentPlayer == 1) ? player1TargetHistoryBoard : player2TargetHistoryBoard;
+
+            gameEnded = playerTurn(scanner, currentPlayer, currentLocationBoard, currentTargetHistoryBoard);
+
+            currentPlayer = (currentPlayer == 1) ? 2 : 1;
+        }
+
+        System.out.println("PLAYER " + (currentPlayer == 1 ? 2 : 1) + " WINS! YOU SUNK ALL OF YOUR OPPONENT'S SHIPS!");
+        System.out.println("\nFinal boards:");
+        printBattleShip(player1LocationBoard);
+        printBattleShip(player2LocationBoard);
+    }
+
+    private static char[][] createEmptyBoard() {
+        char[][] board = new char[GRID_SIZE][GRID_SIZE];
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                board[i][j] = EMPTY;
+            }
+        }
+        return board;
+    }
+
+    private static void enterAllShipLocations(Scanner scanner, int player, char[][] locationBoard, String prompt) {
+        System.out.println(prompt);
+        for (int i = 0; i < 5; i++) {
+            while (true) {
+                System.out.println("Enter ship " + (i + 1) + " location:");
+                int row = scanner.nextInt();
+                int col = scanner.nextInt();
+
+                if (isValidLocation(row, col)) {
+                    if (locationBoard[row][col] == EMPTY) {
+                        locationBoard[row][col] = SHIP;
+                        break;
+                    } else {
+                        System.out.println("You already have a ship there. Choose different coordinates.");
+                    }
+                } else {
+                    System.out.println("Invalid coordinates. Choose different coordinates.");
+                }
+            }
+        }
+    }
+
+    private static boolean playerTurn(Scanner scanner, int currentPlayer, char[][] opponentBoard, char[][] targetHistoryBoard) {
+        boolean validShot;
+        do {
+            System.out.println("Player " + currentPlayer + ", enter hit row/column:");
+            int row = scanner.nextInt();
+            int col = scanner.nextInt();
+
+            validShot = isValidLocation(row, col) && targetHistoryBoard[row][col] == EMPTY;
+
+            if (!validShot) {
+                if (!isValidLocation(row, col)) {
+                    System.out.println("Invalid coordinates. Choose different coordinates.");
+                } else if (targetHistoryBoard[row][col] != EMPTY) {
+                    System.out.println("You already fired on this spot. Choose different coordinates.");
+                }
+            } else {
+                processShot(row, col, opponentBoard, targetHistoryBoard, currentPlayer);
+                printBattleShip(targetHistoryBoard);
+            }
+        } while (!validShot);
+
+        return checkWin(opponentBoard);
+    }
+
+    private static void processShot(int row, int col, char[][] opponentBoard, char[][] targetHistoryBoard, int currentPlayer) {
+        if (opponentBoard[row][col] == SHIP) {
+            opponentBoard[row][col] = HIT;
+            targetHistoryBoard[row][col] = HIT;
+            System.out.println("PLAYER " + currentPlayer + " HIT PLAYER " + (currentPlayer == 1 ? 2 : 1) + "'s ship!");
+        } else {
+            opponentBoard[row][col] = MISS;
+            targetHistoryBoard[row][col] = MISS;
+            System.out.println("PLAYER " + currentPlayer + " MISSED!");
+        }
+    }
+
+    private static boolean isValidLocation(int row, int col) {
+        return row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE;
+    }
+
+    private static boolean checkWin(char[][] board) {
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                if (board[i][j] == SHIP) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private static void printBattleShip(char[][] player) {
+        System.out.print("  ");
+        for (int row = -1; row < 5; row++) {
+            if (row > -1) {
+                System.out.print(row + " ");
+            }
+            for (int column = 0; column < 5; column++) {
+                if (row == -1) {
+                    System.out.print(column + " ");
+                } else {
+                    System.out.print(player[row][column] + " ");
+                }
+            }
+            System.out.println("");
+        }
+    }
+}
