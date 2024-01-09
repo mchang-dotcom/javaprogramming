@@ -1,0 +1,335 @@
+public class RedAstronaut extends Player implements Impostor {
+    private String skill;
+
+    public RedAstronaut(String name, int susLevel, String skill) {
+        super(name, susLevel);
+        this.skill = skill.toLowerCase();
+    }
+
+    public RedAstronaut(String name) {
+        this(name, 15, "experienced");
+    }
+
+    @Override
+    public void emergencyMeeting() {
+        if (!isFrozen() && !gameOver()) {
+            // Implement meeting logic here
+        }
+    }
+
+    @Override
+    public void freeze(Player p) {
+        if (!this.isFrozen() && !p.isFrozen() && !(p instanceof Impostor) && !gameOver()) {
+            if (this.getSusLevel() < p.getSusLevel()) {
+                p.setFrozen(true);
+            } else {
+                this.setSusLevel(this.getSusLevel() * 2);
+            }
+            gameOver();
+        }
+    }
+
+    @Override
+    public void sabotage(Player p) {
+        if (!this.isFrozen() && !(p instanceof Impostor) && !p.isFrozen() && !gameOver()) {
+            if (this.getSusLevel() < 20) {
+                p.setSusLevel((int) (p.getSusLevel() * 1.5));
+            } else {
+                p.setSusLevel((int) (p.getSusLevel() * 1.25));
+            }
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof RedAstronaut)) return false;
+        if (!super.equals(o)) return false;
+        RedAstronaut that = (RedAstronaut) o;
+        return skill.equals(that.skill);
+    }
+
+    @Override
+    public String toString() {
+        String result = "My name is " + getName() + ", and I have a suslevel of " + getSusLevel() +
+                ". I am currently " + (isFrozen() ? "frozen" : "not frozen") + ". I am an " + skill + " player!";
+        return getSusLevel() > 15 ? result.toUpperCase() : result;
+    }
+}
+
+
+public class BlueAstronaut extends Player implements Crewmate {
+    private int numTasks;
+    private int taskSpeed;
+
+    public BlueAstronaut(String name, int susLevel, int numTasks, int taskSpeed) {
+        super(name, susLevel);
+        this.numTasks = numTasks;
+        this.taskSpeed = taskSpeed;
+    }
+
+    public BlueAstronaut(String name) {
+        this(name, 15, 6, 10);
+    }
+
+    @Override
+    public void emergencyMeeting() {
+        if (!isFrozen() && !gameOver()) {
+            // Implement meeting logic here
+        }
+    }
+
+    @Override
+    public void completeTask() {
+        if (!isFrozen() && numTasks > 0 && !gameOver()) {
+            if (taskSpeed > 20) {
+                numTasks = Math.max(0, numTasks - 2);
+            } else {
+                numTasks--;
+            }
+
+            if (numTasks == 0) {
+                System.out.println("I have completed all my tasks");
+                setSusLevel(getSusLevel() / 2);
+            }
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof BlueAstronaut)) return false;
+        if (!super.equals(o)) return false;
+        BlueAstronaut that = (BlueAstronaut) o;
+        return numTasks == that.numTasks && taskSpeed == that.taskSpeed;
+    }
+
+    @Override
+    public String toString() {
+        String result = "My name is " + getName() + ", and I have a suslevel of " + getSusLevel() +
+                ". I am currently " + (isFrozen() ? "frozen" : "not frozen") + ". I have " + numTasks + " left over.";
+        return getSusLevel() > 15 ? result.toUpperCase() : result;
+    }
+}
+
+
+
+
+public class Gameplay {
+    public static void main(String[] args) {
+        BlueAstronaut bob = new BlueAstronaut("Bob", 20, 6, 30);
+        BlueAstronaut heath = new BlueAstronaut("Heath", 30, 3, 21);
+        BlueAstronaut albert = new BlueAstronaut("Albert", 44, 2, 0);
+        BlueAstronaut angel = new BlueAstronaut("Angel", 0, 1, 0);
+        RedAstronaut liam = new RedAstronaut("Liam", 19, "experienced");
+        RedAstronaut suspiciousPerson = new RedAstronaut("Suspicious Person", 100, "expert");
+
+        liam.sabotage(bob);
+        System.out.println(bob);
+
+        liam.freeze(suspiciousPerson);
+        liam.freeze(albert);
+        System.out.println(liam);
+        System.out.println(albert);
+
+        albert.emergencyMeeting();
+        suspiciousPerson.emergencyMeeting();
+        bob.emergencyMeeting();
+        System.out.println(suspiciousPerson);
+
+        heath.completeTask();
+        System.out.println(heath);
+        heath.completeTask();
+        System.out.println(heath);
+        heath.completeTask();
+
+        liam.freeze(angel);
+        System.out.println(angel);
+        System.out.println(liam);
+
+        liam.sabotage(bob);
+        liam.sabotage(bob);
+        System.out.println(bob);
+
+        liam.freeze(bob);
+        System.out.println(bob);
+
+        liam.sabotage(heath);
+        liam.sabotage(heath);
+        liam.sabotage(heath);
+        liam.sabotage(heath);
+        liam.sabotage(heath);
+        System.out.println(heath);
+
+        liam.freeze(heath);
+        System.out.println(heath);
+        System.out.println("Impostors win!");
+    }
+}
+
+
+import java.util.ArrayList;
+
+/**
+ * This class represents the Player class in the Amidst Us game.
+ * It will represent a player in the game.
+ * @author CS 1331 TAs
+ * @version 1.1
+ */
+public abstract class Player implements Comparable<Player> {
+    private String name;
+    private int susLevel;
+    private boolean frozen;
+    private static Player[] players;
+
+    /**
+     * Constructor for Player Objects. Be sure to use this constructor, as it properly populates the players array.
+     * The logic in this constructor ensures that players is always full, although frozen players will still be in it.
+     * NOTE: Use getPlayers() each time you need it, since the reference will change with every new instance.
+     * @param name Name of the player
+     * @param susLevel Integer that represents the suspicion level, with higher being more suspicious.
+     *                 Negative values will be set to a minimum of 0.
+     */
+    public Player(String name, int susLevel) {
+        this.name = name;
+        if (susLevel >= 0) {
+            this.susLevel = susLevel;
+        } else {
+            this.susLevel = 0;
+        }
+        if (players == null) {
+            players = new Player[1];
+            players[0] = this;
+        } else {
+            int length = players.length + 1;
+            Player[] temp = players;
+            players = new Player[length];
+            for (int i = 0; i < temp.length; i++) {
+                players[i] = temp[i];
+            }
+            players[players.length - 1] = this;
+        }
+    }
+
+    /**
+     * This method is an abstract method called emergencyMeeting.
+     * This method will be overridden by any child class and will be used to
+     * have an emergency meeting.
+     */
+    public abstract void emergencyMeeting();
+
+    /**
+     * This method is the compareTo method from the Comparable interface.
+     * It will compare two Player objects based on their susLevel
+     * @param p this method takes in a Player to compare values to
+     * @return int this value will tell you the ordering of 2 Player objects
+     */
+    @Override
+    public int compareTo(Player p) {
+        return Integer.compare(this.susLevel, p.susLevel);
+    }
+
+    /**
+     * This is the equals method which tells you if two Players are equal
+     * @param o the other Player that you are comparing
+     * @return boolean based on whether or not the two objects are equal
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Player) {
+            Player player = (Player) o;
+            return this.name.equals(player.name) && this.frozen == player.frozen
+                    && this.susLevel == player.susLevel;
+        }
+        return false;
+    }
+
+    /**
+     * This method overrides the toString method to specify what will be returned
+     * if a specific instance of a Player object is printed out.
+     * @return String of the values that we want to print out
+     */
+    @Override
+    public String toString() {
+        String frozenString = frozen ? "frozen" : "not frozen";
+        return "My name is " + this.name + ", and I have a susLevel of "
+                + this.susLevel + ". I am currently " + frozenString + ".";
+    }
+
+    /**
+     * This method tells you whether the game is over or not.
+     * You will call this method in your frozen and emergencyMeeting methods.
+     * @return boolean whether or not the game is over
+     */
+    public boolean gameOver() {
+        int impostorCount = 0;
+        int crewmateCount = 0;
+        for (Player p : players) {
+            if (p instanceof Impostor && !p.isFrozen()) {
+                impostorCount++;
+            } else if (p instanceof Crewmate && !p.isFrozen()) {
+                crewmateCount++;
+            }
+        }
+        if (impostorCount == 0) {
+            System.out.println("Crewmates Win!");
+            return true;
+        } else if (impostorCount >= crewmateCount) {
+            System.out.println("Impostors Win!");
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * This is the getter for the instance variable name
+     * @return String the Player's name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * This is the getter for the susLevel
+     * @return int the Player's susLevel
+     */
+    public int getSusLevel() {
+        return susLevel;
+    }
+
+    /**
+     * This is the setter for susLevel. SusLevel is always a positive value.
+     * @param susLevel the value to change susLevel to
+     */
+    public void setSusLevel(int susLevel) {
+        if (susLevel >= 0) {
+            this.susLevel = susLevel;
+        } else {
+            this.susLevel = 0;
+        }
+    }
+
+    /**
+     * This is the getter for frozen;
+     * @return boolean if the Player is frozen
+     */
+    public boolean isFrozen() {
+        return frozen;
+    }
+
+    /**
+     * this is the setter for frozen.
+     * @param frozen what to change frozen to
+     */
+    public void setFrozen(boolean frozen) {
+        this.frozen = frozen;
+    }
+
+    /**
+     * This is the getter for the players array
+     * @return Player[] the entire player array
+     */
+    public static Player[] getPlayers() {
+        return players;
+    }
+}
