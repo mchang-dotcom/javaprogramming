@@ -1,0 +1,318 @@
+public abstract class Pet {
+    String name;
+    double health;
+    private int painLevel;
+
+    public Pet(String name, double health, int painLevel) {
+        this.name = name;
+        this.health = Math.max(0.0, Math.min(1.0, health));
+        this.painLevel = Math.max(1, Math.min(10, painLevel));
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public double getHealth() {
+        return health;
+    }
+
+    public int getPainLevel() {
+        return painLevel;
+    }
+
+    public abstract int treat();
+
+    public void speak() {
+        String message = "Hello! My name is " + name;
+        if (painLevel > 5) {
+            message = message.toUpperCase();
+        }
+        System.out.println(message);
+    }
+
+    protected void heal() {
+        health = 1.0;
+        painLevel = 1;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Pet pet = (Pet) o;
+        return name.equals(pet.name);
+    }
+}
+
+
+
+
+
+public class Dog extends Pet {
+    private double droolRate;
+
+    public Dog(String name, double health, int painLevel, double droolRate) {
+        super(name, health, painLevel);
+        this.droolRate = Math.max(0.5, droolRate);
+    }
+
+    public Dog(String name, double health, int painLevel) {
+        this(name, health, painLevel, 5.0);
+    }
+
+    public double getDroolRate() {
+        return droolRate;
+    }
+
+    @Override
+    public int treat() {
+        heal();
+        double treatmentTime;
+        if (droolRate < 3.5) {
+            treatmentTime = (getPainLevel() * 2) / getHealth();
+        } else if (droolRate <= 7.5) {
+            treatmentTime = getPainLevel() / getHealth();
+        } else {
+            treatmentTime = getPainLevel() / (getHealth() * 2);
+        }
+        return (int) Math.ceil(treatmentTime);
+    }
+
+    @Override
+    public void speak() {
+        super.speak();
+        String bark = getPainLevel() > 5 ? "BARK " : "bark ";
+        for (int i = 0; i < getPainLevel(); i++) {
+            System.out.print(bark);
+        }
+        System.out.println();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Dog)) return false;
+        if (!super.equals(o)) return false;
+        Dog dog = (Dog) o;
+        return Double.compare(dog.droolRate, droolRate) == 0;
+    }
+}
+
+
+
+public class Cat extends Pet {
+    private int miceCaught;
+
+    public Cat(String name, double health, int painLevel, int miceCaught) {
+        super(name, health, painLevel);
+        this.miceCaught = Math.max(0, miceCaught);
+    }
+
+    public Cat(String name, double health, int painLevel) {
+        this(name, health, painLevel, 0);
+    }
+
+    public int getMiceCaught() {
+        return miceCaught;
+    }
+
+    @Override
+    public int treat() {
+        heal();
+        double treatmentTime;
+        if (miceCaught < 4) {
+            treatmentTime = (getPainLevel() * 2) / getHealth();
+        } else if (miceCaught <= 7) {
+            treatmentTime = getPainLevel() / getHealth();
+        } else {
+            treatmentTime = getPainLevel() / (getHealth() * 2);
+        }
+        return (int) Math.ceil(treatmentTime);
+    }
+
+    @Override
+    public void speak() {
+        super.speak();
+        String meow = getPainLevel() > 5 ? "MEOW " : "meow ";
+        for (int i = 0; i < getMiceCaught(); i++) {
+            System.out.print(meow);
+        }
+        System.out.println();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Cat)) return false;
+        if (!super.equals(o)) return false;
+        Cat cat = (Cat) o;
+        return miceCaught == cat.miceCaught;
+    }
+}
+
+
+
+
+
+
+public class InvalidPetException extends RuntimeException {
+    public InvalidPetException() {
+        super("Your pet is invalid!");
+    }
+
+    public InvalidPetException(String message) {
+        super(message);
+    }
+}
+
+
+
+
+
+
+
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.util.Scanner;
+
+public class Clinic {
+    private File patientFile;
+    private int day;
+
+    public Clinic(File file) {
+        this.patientFile = file;
+        this.day = 1;
+    }
+
+    public Clinic(String fileName) {
+        this(new File(fileName));
+    }
+    
+    public int getDay() {
+        return day;
+    }
+
+    public String nextDay(File file) throws FileNotFoundException {
+        Scanner scanner = new Scanner(file);
+        StringBuilder appointmentDetails = new StringBuilder();
+
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            String[] parts = line.split(",");
+            if (parts.length != 4) {
+                System.out.println("Invalid format in the Appointments.csv file. Skipping line: " + line);
+                continue;
+            }
+
+            String name = parts[0];
+            String typeOfPet = parts[1];
+            double health = Double.parseDouble(parts[2]);
+            int painLevel = Integer.parseInt(parts[3]);
+
+            String formattedTime = formatTime(parts[3]); // Assuming parts[3] contains time
+
+            Pet pet;
+            if (typeOfPet.equals("Dog")) {
+                double droolRate = Double.parseDouble(parts[2]);
+                pet = new Dog(name, health, painLevel, droolRate);
+            } else if (typeOfPet.equals("Cat")) {
+                int miceCaught = Integer.parseInt(parts[2]);
+                pet = new Cat(name, health, painLevel, miceCaught);
+            } else {
+                throw new InvalidPetException("Invalid pet type in the Appointments.csv file: " + typeOfPet);
+            }
+
+            pet.speak();
+            int treatmentTime = pet.treat();
+            String timeOut = addTime(formattedTime, treatmentTime);
+
+            appointmentDetails.append(String.format("%s,%s,%s,Day %d,%s,%s,%.1f,%d%n",
+                    pet.getName(), typeOfPet, pet instanceof Dog ? ((Dog) pet).getDroolRate() : ((Cat) pet).getMiceCaught(),
+                    day, formattedTime, timeOut, pet.getHealth(), pet.getPainLevel()));
+        }
+
+        scanner.close();
+        day++;
+        return appointmentDetails.toString();
+    }
+
+    private double promptForHealth(String petName, String typeOfPet, String time) {
+        Scanner scanner = new Scanner(System.in);
+        double health;
+        do {
+            System.out.print("Consultation for " + petName + " the " + typeOfPet + " at " + time + ".\nWhat is the health of " + petName + "? ");
+            try {
+                health = Double.parseDouble(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input! Please enter a number.");
+                health = -1;
+            }
+        } while (health < 0 || health > 1);
+        return health;
+    }
+
+    private int promptForPainLevel(String petName, String typeOfPet, String time) {
+        Scanner scanner = new Scanner(System.in);
+        int painLevel;
+        do {
+            System.out.print("On a scale of 1 to 10, how much pain is " + petName + " in right now? ");
+            try {
+                painLevel = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input! Please enter a number.");
+                painLevel = -1;
+            }
+        } while (painLevel < 1 || painLevel > 10);
+        return painLevel;
+    }
+
+    private String formatTime(String timeStr) {
+        if (timeStr.length() == 4) {
+            return timeStr.substring(0, 2) + ":" + timeStr.substring(2);
+        }
+        return timeStr;
+    }
+
+    private String addTime(String timeIn, int treatmentTime) {
+        int hours = Integer.parseInt(timeIn.substring(0, 2));
+        int minutes = Integer.parseInt(timeIn.substring(3)) + treatmentTime;
+        hours += minutes / 60;
+        minutes %= 60;
+        return String.format("%02d:%02d", hours, minutes);
+    }
+
+    public boolean addToFile(String patientInfo) {
+        StringBuilder fileContent = new StringBuilder();
+        boolean isUpdated = false;
+
+        try (Scanner scanner = new Scanner(patientFile)) {
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                if (line.startsWith(patientInfo.split(",")[0])) {
+                    line = patientInfo; // Replace with new patient information
+                    isUpdated = true;
+                }
+                fileContent.append(line).append(System.lineSeparator());
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        if (!isUpdated) { // Append if it's a new patient
+            fileContent.append(patientInfo).append(System.lineSeparator());
+        }
+
+        try (PrintWriter writer = new PrintWriter(patientFile)) {
+            writer.print(fileContent.toString());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
+}
